@@ -15,13 +15,11 @@
 					<string>Default Configuration</string>
 					<key>UISceneDelegateClassName</key>
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
-					<key>UISceneStoryboardFile</key>
-					<string>Main</string>
 				</dict>
 			</array>
 		</dict>
 	</dict>
-    <key>NSCameraUsageDescription</key>
-    <string>Barkod okumak için kamera erişimi gerekiyor</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Barkod okumak için kamera erişimi gerekiyor</string>
 </dict>
 </plist>

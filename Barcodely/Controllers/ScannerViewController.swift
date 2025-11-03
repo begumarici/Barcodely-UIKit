@@ -8,15 +8,52 @@
 import UIKit
 
 class ScannerViewController: UIViewController {
-
-    @IBOutlet weak var previewView: UIView!
-    @IBOutlet weak var scanButton: UIButton!
     
+    // MARK: - Properties
     private let viewModel = ScanViewModel()
     
+    var onNavigateToDetail: ((ProductDetail) -> Void)?
+    
+    // MARK: - UI Components
+    private let previewView: UIView = {
+        let view = UIView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.backgroundColor = .black
+        return view
+    }()
+    
+    private let instructionLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Point camera at barcode"
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 19, weight: .medium)
+        label.textAlignment = .center
+        label.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        label.layer.cornerRadius = 8
+        label.clipsToBounds = true
+        return label
+    }()
+    
+    private let scanButton: UIButton = {
+        let button = UIButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Scan Barcode", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+        button.backgroundColor = .systemGreen
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 12
+       
+        return button
+    }()
+    
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        view.backgroundColor = .systemBackground
+        setupUI()
+        setupActions()
         viewModel.setupCamera(on: previewView)
         setupBindings()
     }
@@ -25,6 +62,7 @@ class ScannerViewController: UIViewController {
         super.viewWillAppear(animated)
         scanButton.isEnabled = true
         scanButton.setTitle("Scan Barcode", for: .normal)
+        scanButton.backgroundColor = .systemGreen
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -37,43 +75,79 @@ class ScannerViewController: UIViewController {
         viewModel.updatePreviewLayerFrame(previewView.bounds)
     }
     
+    // MARK: - Setup UI
+    private func setupUI() {
+        view.addSubview(previewView)
+        view.addSubview(instructionLabel)
+        view.addSubview(scanButton)
+        
+        setupConstraints()
+    }
+    
+    private func setupConstraints() {
+        NSLayoutConstraint.activate([
+            previewView.topAnchor.constraint(equalTo: view.topAnchor),
+            previewView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            previewView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            previewView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        NSLayoutConstraint.activate([
+            instructionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            instructionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            instructionLabel.widthAnchor.constraint(equalToConstant: 250),
+            instructionLabel.heightAnchor.constraint(equalToConstant: 44)
+        ])
+        
+        NSLayoutConstraint.activate([
+            scanButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
+            scanButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            scanButton.widthAnchor.constraint(equalToConstant: 200),
+            scanButton.heightAnchor.constraint(equalToConstant: 56)
+        ])
+    }
+    
+    // MARK: - Setup Actions
+    private func setupActions() {
+        scanButton.addTarget(self, action: #selector(scanButtonTapped), for: .touchUpInside)
+    }
+    
+    // MARK: - Bindings
     private func setupBindings() {
-        viewModel.onBarcodeScanned = { [weak self] barcode in
+        viewModel.onBarcodeScanned = { barcode in
             print("barcode has read: \(barcode)")
         }
         
         viewModel.onProductFetched = { [weak self] product in
             print("product found: \(product.productName ?? "")")
             
-            guard let tabBarController = self?.tabBarController else {
-                print("tabbarcontroller not found")
-                return
-            }
-            
-            if let detailVC = tabBarController.viewControllers?[1] as? ProductDetailViewController {
-                detailVC.product = product
-                tabBarController.selectedIndex = 1
+            DispatchQueue.main.async {
+                self?.scanButton.backgroundColor = .systemGreen
+                
+                self?.onNavigateToDetail?(product)
             }
         }
         
         viewModel.onError = { [weak self] error in
             print("error: \(error)")
-            self?.scanButton.isEnabled = true
-            self?.scanButton.setTitle("Scan Again", for: .normal)
+            DispatchQueue.main.async {
+                self?.scanButton.isEnabled = true
+                self?.scanButton.setTitle("Scan Again", for: .normal)
+                self?.scanButton.backgroundColor = .systemGreen
+            }
         }
         
-        viewModel.onLoadingStateChanged = { [weak self] isLoading in
+        viewModel.onLoadingStateChanged = { isLoading in
             print("loading: \(isLoading)")
         }
-        
-        
     }
     
-    
-    @IBAction func scanButtonTapped(_ sender: Any) {
+    // MARK: - Actions
+    @objc private func scanButtonTapped() {
         viewModel.startScanning()
         scanButton.isEnabled = false
         scanButton.setTitle("Scanning...", for: .normal)
+        scanButton.backgroundColor = .systemGray
     }
     
 }

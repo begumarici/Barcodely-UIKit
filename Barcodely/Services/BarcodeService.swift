@@ -10,19 +10,20 @@ import UIKit
 
 class BarcodeService: NSObject {
     
+    // MARK: - Properties
     private let captureSession: AVCaptureSession
     private let previewLayer: AVCaptureVideoPreviewLayer
     
     var onBarcodeDetected: ((String) -> Void)?
     
-    
+    // MARK: - Initialization
     override init() {
         captureSession = AVCaptureSession()
         previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
         super.init()
     }
     
-    
+    // MARK: - Setup
     func setup(on view: UIView) {
         guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
             print("no camera found")
@@ -63,6 +64,7 @@ class BarcodeService: NSObject {
         
     }
     
+    // MARK: - Public Methods
     func startScanning() {
         guard !captureSession.isRunning else { return }
         
@@ -84,6 +86,7 @@ class BarcodeService: NSObject {
     }
 }
 
+// MARK: - AVCaptureMetadataOutputObjectsDelegate
 extension BarcodeService: AVCaptureMetadataOutputObjectsDelegate {
     
     func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {

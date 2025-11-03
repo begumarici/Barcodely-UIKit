@@ -10,14 +10,13 @@ import UIKit
 
 class ScanViewModel {
     
+    // MARK: - Properties
     let barcodeService = BarcodeService()
     let apiService = APIService()
     
     private(set) var isScanning: Bool = false
     private(set) var isLoading: Bool = false
-    
     private(set) var product: ProductDetail?
-    
     private(set) var errorMessage: String?
     
     var onBarcodeScanned: ((String) -> Void)?
@@ -25,15 +24,18 @@ class ScanViewModel {
     var onError: ((String) -> Void )?
     var onLoadingStateChanged: ((Bool) -> Void)?
     
+    // MARK: - Initialization
     init() {
         setupBarcodeService()
     }
     
+    // MARK: - Setup
     private func setupBarcodeService() {
         barcodeService.onBarcodeDetected = { [weak self] barcode in
             self?.didScanBarcode(barcode)}
     }
     
+    // MARK: - Public Methods
     func setupCamera(on view: UIView){
         barcodeService.setup(on: view)
     }
@@ -51,7 +53,8 @@ class ScanViewModel {
     func updatePreviewLayerFrame(_ frame: CGRect) {
         barcodeService.updatePreviewLayerFrame(frame)
     }
-    
+
+    // MARK: - Private Methods
     private func didScanBarcode(_ barcode: String) {
         
         stopScanning()
