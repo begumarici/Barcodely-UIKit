@@ -80,6 +80,8 @@ class ScannerViewController: UIViewController {
         view.addSubview(previewView)
         view.addSubview(instructionLabel)
         view.addSubview(scanButton)
+        view.addSubview(loadingIndicator)
+        view.addSubview(loadingLabel)
         
         setupConstraints()
     }
@@ -105,6 +107,53 @@ class ScannerViewController: UIViewController {
             scanButton.widthAnchor.constraint(equalToConstant: 200),
             scanButton.heightAnchor.constraint(equalToConstant: 56)
         ])
+        
+        NSLayoutConstraint.activate([
+            loadingIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            loadingIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+        
+        NSLayoutConstraint.activate([
+            loadingLabel.topAnchor.constraint(equalTo: loadingIndicator.bottomAnchor, constant: 16),
+            loadingLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+        ])
+    }
+    
+    // MARK: - UI Components
+    private let loadingIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        indicator.color = .white
+        indicator.hidesWhenStopped = true
+        return indicator
+    }()
+
+    private let loadingLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.text = "Searching product..."
+        label.textColor = .white
+        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.textAlignment = .center
+        label.alpha = 0
+        return label
+    }()
+    
+    // MARK: - Loading State
+    private func updateLoadingState(_ isLoading: Bool) {
+        if isLoading {
+            loadingIndicator.startAnimating()
+            UIView.animate(withDuration: 0.3) {
+                self.loadingLabel.alpha = 1
+                self.instructionLabel.alpha = 0
+            }
+        } else {
+            loadingIndicator.stopAnimating()
+            UIView.animate(withDuration: 0.3) {
+                self.loadingLabel.alpha = 0
+                self.instructionLabel.alpha = 1
+            }
+        }
     }
     
     // MARK: - Setup Actions
@@ -134,12 +183,29 @@ class ScannerViewController: UIViewController {
                 self?.scanButton.isEnabled = true
                 self?.scanButton.setTitle("Scan Again", for: .normal)
                 self?.scanButton.backgroundColor = .systemGreen
+                
+                self?.showErrorAlert(message: error)
             }
         }
         
-        viewModel.onLoadingStateChanged = { isLoading in
-            print("loading: \(isLoading)")
+        viewModel.onLoadingStateChanged = { [weak self] isLoading in
+            DispatchQueue.main.async {
+                self?.updateLoadingState(isLoading)
+            }
         }
+    }
+    
+    // MARK: - Alert
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(
+            title: "Product Not Found",
+            message: "The scanned product is not available in the database. Please try another barcode.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        
+        present(alert, animated: true)
     }
     
     // MARK: - Actions

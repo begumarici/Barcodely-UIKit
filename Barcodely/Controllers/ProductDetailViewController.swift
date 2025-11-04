@@ -168,7 +168,7 @@ class ProductDetailViewController: UIViewController {
     // MARK: - Private Methods
     private func displayProduct() {
         guard let product = product else {
-            print("no product")
+            showEmptyState()
             return
         }
         
@@ -191,5 +191,13 @@ class ProductDetailViewController: UIViewController {
         print("marka: \(product.brands ?? "no brand")")
         print("ingredients: \(product.ingredientsText ?? "no inggredients available")")
         print("warnings: \(product.warningMessages.joined(separator: ","))")
+    }
+    
+    private func showEmptyState() {
+        productNameLabel.text = "No Product"
+        brandNameLabel.text = "Scan a barcode to see details"
+        ingredientsTextView.text = "Product information will appear here"
+        warningsTextView.text = "Warnings will appear here"
+        warningsTextView.textColor = .systemGray
     }
 }
